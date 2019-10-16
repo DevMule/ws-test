@@ -36,12 +36,24 @@ connection.addEventListener('open', () => {
 });
 
 connection.addEventListener('message', (message)=>{
-	chat.wrireline(message.data);
+	var event = JSON.parse(message.data);
+	switch (event.type) {
+		case 'message':
+			chat.wrireline(event.data);
+			break;
+
+		default:
+			console.log('unknown event', event);
+			break;
+	}
 });
 
 function send(message) {
 	if (connection.readyState === WebSocket.OPEN) {
-		connection.send(message);
+		connection.send(JSON.stringify({
+			type: 'message',
+			data: message,
+		}));
 		chat.wrireline(message);
 	}
 }
