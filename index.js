@@ -11,7 +11,7 @@ let BattleshipMess = {
 	setGame: function (p1) {
 		if (this.waits[0] && this.waits[0] !== p1) {
 			let p2 = this.waits.pop();
-			let pair = [p1, p2, true];
+			let pair = [p1, p2];
 			this.gameByPlayer[p1] = pair;
 			this.gameByPlayer[p2] = pair;
 			return true;
@@ -143,12 +143,14 @@ wss.on('connection', (ws) => {
 					let game = BattleshipMess.gameByPlayer[ws];
 
 					// player can move - false - p1's move, else - p2's move
-					let [otherPlayer, pCanTurn] = game[0] !== ws ? [game[0], game[2]] : [game[1], !game[2]];
+					let otherPlayer = game[0] !== ws ? game[0] : game[1];
+					otherPlayer.send(JSON.stringify(msg));
+					game[2] = !game[2];
 
-					if (pCanTurn) {
-						otherPlayer.send(JSON.stringify(msg));
-						game[2] = !game[2];
-					}
+				} else if (msg.value === 'status') {
+					let game = BattleshipMess.gameByPlayer[ws];
+					let otherPlayer = game[0] !== ws ? game[0] : game[1];
+					otherPlayer.send(JSON.stringify(msg));
 				}
 				break;
 

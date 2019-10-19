@@ -180,6 +180,8 @@ class Battleship extends Service {
 		// service values
 		this.myTurn = true;
 		this.gameStatus = "offline";
+		this.myShips = [];
+		this.randomizeShips(this.myBoard);
 	}
 
 	onEvent(event) {
@@ -203,9 +205,22 @@ class Battleship extends Service {
 				break;
 
 			case 'turn':
-				this.myTurn = true;
-				this.wrireline(`enemy\'s turn: ${event.col}, ${event.row}, now my turn`);
+				let ship = this.isShip(this.myBoard, event.col, event.row);
+				let isHit = !!ship;
+				let deadShip = this.getShipIfDead(this.myBoard, ship);
+				this.hitBoard(this.myBoard, event.col, event.row, isHit);
+				this.sendStatus(isHit, event.col, event.row, deadShip);
+				if (!isHit)
+					this.myTurn = true;
+				this.wrireline(`enemy\'s turn: ${event.col}, ${event.row}, ${isHit ? 'HIT, its turn again' : 'MISS, my turn'}`);
 				break;
+
+			case 'status':
+				this.hitBoard(this.enemyBoard, event.col, event.row, event.isHit);
+				if (event.isHit) this.myTurn = true;
+				this.wrireline(event.isHit ? `we hit the enemy, we can make turn again!` : `we miss, enemy's turn`);
+				break;
+
 
 			default:
 				break;
@@ -244,6 +259,18 @@ class Battleship extends Service {
 		this.battleLog.value += '\n' + message;
 	}
 
+	// game interface
+	sendStatus(isHit, col, row, ship) {
+		this.app.send({
+			type: 'Battleship',
+			value: 'status',
+			isHit: isHit,
+			ship: ship,
+			col: col,
+			row: row,
+		});
+	}
+
 	sendClick(col, row) {
 		this.app.send({
 			type: 'Battleship',
@@ -251,6 +278,34 @@ class Battleship extends Service {
 			col: col,
 			row: row,
 		});
+	}
+
+	isShip(board, col, row) {
+		return board.data[row][col];
+	}
+
+	getShipIfDead(board, ship) {
+		let shipsLength = ship.length;
+		for (let i = 0; i < shipsLength; i++) {
+			let segment = ship[i];
+			shipsLength -= this.isAlreadyHited(board, segment[0], segment[1]);
+			console.log(shipsLength);
+		}
+		return shipsLength === 0;
+	}
+
+	isAlreadyHited(board, col, row) {
+		let btn = board.chunks[row][col];
+		return !!btn.click;
+	}
+
+	hitBoard(board, col, row, isHit = false) {
+		let btn = board.chunks[row][col];
+		btn.removeEventListener('click', this.onBoardClick.bind(this, board, col, row));
+		btn.style.opacity = '0.5';
+		if (isHit)
+			btn.style.color =
+				btn.style.backgroundColor = '#ff9999';
 	}
 
 	// board interface
@@ -286,7 +341,7 @@ class Battleship extends Service {
 
 				let btn = document.createElement("div");
 				btn.style.width =
-					btn.style.height = '25px';
+					btn.style.height = '30px';
 				btn.style.color =
 					btn.style.backgroundColor = '#999999';
 				colElem.appendChild(btn);
@@ -294,9 +349,7 @@ class Battleship extends Service {
 				board.chunks[row].push(btn);
 				board.data[row].push(null);
 
-				btn.addEventListener('click', () => {
-					this.onBoardClick(board, col, row)
-				});
+				btn.addEventListener('click', this.onBoardClick.bind(this, board, col, row));
 			}
 		}
 		return board;
@@ -309,6 +362,9 @@ class Battleship extends Service {
 				let btn = board.chunks[row][col];
 				btn.style.color =
 					btn.style.backgroundColor = '#999999';
+				btn.addEventListener('click', () => {
+					this.onBoardClick(board, col, row)
+				});
 				board.data[row][col] = null;
 			}
 	}
@@ -356,6 +412,7 @@ class Battleship extends Service {
 			btn.style.color =
 				btn.style.backgroundColor = '#ff9999';
 		}
+		this.myShips.push(ship);
 	}
 
 	randomizeShips(board) {
@@ -378,6 +435,7 @@ class Battleship extends Service {
 	}
 
 	resetBoard() {
+		this.myships = [];
 		this.clearBoard(this.myBoard);
 		this.randomizeShips(this.myBoard);
 	}
