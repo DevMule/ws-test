@@ -207,8 +207,9 @@ class Battleship extends Service {
 			case 'turn':
 				let ship = this.isShip(this.myBoard, event.col, event.row);
 				let isHit = !!ship;
-				let deadShip = this.getShipIfDead(this.myBoard, ship);
 				this.hitBoard(this.myBoard, event.col, event.row, isHit);
+				let deadShip = ship ? this.isShipDead(this.myBoard, ship) ? ship : null : null;
+				if (deadShip) this.highlightShip(this.myBoard, deadShip);
 				this.sendStatus(isHit, event.col, event.row, deadShip);
 				if (!isHit)
 					this.myTurn = true;
@@ -218,6 +219,7 @@ class Battleship extends Service {
 			case 'status':
 				this.hitBoard(this.enemyBoard, event.col, event.row, event.isHit);
 				if (event.isHit) this.myTurn = true;
+				if (event.ship) this.highlightShip(this.enemyBoard, event.ship);
 				this.wrireline(event.isHit ? `we hit the enemy, we can make turn again!` : `we miss, enemy's turn`);
 				break;
 
@@ -260,6 +262,21 @@ class Battleship extends Service {
 	}
 
 	// game interface
+	highlightShip(board, ship) {
+		for (let i = 0; i < ship.length; i++) {
+			let shipSegment = ship[i];
+			for (let drow = -1; drow < 2; drow++) {
+				for (let dcol = -1; dcol < 2; dcol++) {
+					let row = shipSegment[0] + drow;
+					let col = shipSegment[1] + dcol;
+					if (!(row > 9 || row < 0 || col > 9 || col < 0))
+						if (!board.data[row][col].isHit)
+							this.hitBoard(board, col, row);
+				}
+			}
+		}
+	}
+
 	sendStatus(isHit, col, row, ship) {
 		this.app.send({
 			type: 'Battleship',
@@ -281,26 +298,21 @@ class Battleship extends Service {
 	}
 
 	isShip(board, col, row) {
-		return board.data[row][col];
+		return board.data[row][col].ship;
 	}
 
-	getShipIfDead(board, ship) {
-		let shipsLength = ship.length;
-		for (let i = 0; i < shipsLength; i++) {
+	isShipDead(board, ship) {
+		for (let i = 0; i < ship.length; i++) {
 			let segment = ship[i];
-			shipsLength -= this.isAlreadyHited(board, segment[0], segment[1]);
-			console.log(shipsLength);
+			if (!board.data[segment[0]][segment[1]].isHit)
+				return false;
 		}
-		return shipsLength === 0;
-	}
-
-	isAlreadyHited(board, col, row) {
-		let btn = board.chunks[row][col];
-		return !!btn.click;
+		return true;
 	}
 
 	hitBoard(board, col, row, isHit = false) {
 		let btn = board.chunks[row][col];
+		board.data[row][col].isHit = true;
 		btn.removeEventListener('click', this.onBoardClick.bind(this, board, col, row));
 		btn.style.opacity = '0.5';
 		if (isHit)
@@ -347,7 +359,10 @@ class Battleship extends Service {
 				colElem.appendChild(btn);
 
 				board.chunks[row].push(btn);
-				board.data[row].push(null);
+				board.data[row].push({
+					ship: null,
+					isHit: false,
+				});
 
 				btn.addEventListener('click', this.onBoardClick.bind(this, board, col, row));
 			}
@@ -365,7 +380,10 @@ class Battleship extends Service {
 				btn.addEventListener('click', () => {
 					this.onBoardClick(board, col, row)
 				});
-				board.data[row][col] = null;
+				board.data[row][col] = {
+					ship: null,
+					isHit: false,
+				};
 			}
 	}
 
@@ -395,7 +413,7 @@ class Battleship extends Service {
 					for (let col = -1; col < 2; col++) {
 						let checkCol = col + shipSegment[1];
 						if (checkCol >= 0 && checkCol <= 9)
-							if (board.data[checkRow][checkCol])
+							if (board.data[checkRow][checkCol].ship)
 								return true;
 					}
 
@@ -407,7 +425,7 @@ class Battleship extends Service {
 	placeShip(board, ship) {
 		for (let i = 0; i < ship.length; i++) {
 			let segment = ship[i];
-			board.data[segment[0]][segment[1]] = ship;
+			board.data[segment[0]][segment[1]].ship = ship;
 			let btn = board.chunks[segment[0]][segment[1]];
 			btn.style.color =
 				btn.style.backgroundColor = '#ff9999';
