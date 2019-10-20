@@ -18,8 +18,12 @@ class App {
 		icon.className = 'menu-icon';
 		this.menuCenterDiv.appendChild(icon);
 
-		this.auth = new Authentication(this);
+		// APPS
+		this.chat = new Chat(this);
+		this.folderSys = new FolderSystem(this);
+		this.battleshipGame = new Battleship(this);
 
+		this.auth = new Authentication(this);
 		this.openScreen(this.auth);
 	}
 
@@ -58,12 +62,9 @@ class App {
 	}
 
 	onAuth() {
-		if (!this.chat)
-			this.chat = this.createServiceMenu('CHAT', new Chat(this));
-		if (!this.folderSys)
-			this.folderSys = this.createServiceMenu('FILES', new FolderSystem(this));
-		if (!this.battleshipGame)
-			this.battleshipGame = this.createServiceMenu('BATTLESHIPS', new Battleship(this));
+		this.createServiceMenu('CHAT', this.chat);
+		this.createServiceMenu('FILES', this.folderSys);
+		this.createServiceMenu('BATTLESHIPS', this.battleshipGame);
 		this.openScreen(this.battleshipGame);
 	}
 
@@ -100,15 +101,22 @@ class Chat extends Service {
 		super(app);
 		this.textarea = document.createElement('textarea');
 		this.textarea.disabled = true;
-		this.textarea.style.width =
-			this.textarea.style.height = '500px';
+		this.textarea.style.padding =
+			this.textarea.style.border = '0';
+		this.textarea.style.margin = '15px 0';
+		this.textarea.style.width = '100%';
+		this.textarea.style.resize = 'none';
+		this.textarea.style.height = '500px';
 		this.textarea.style.display = 'block';
 
 		this.messageline = document.createElement('input');
 		this.messageline.addEventListener('keydown', this.keydown.bind(this));
+		this.messageline.className = 'input';
 		this.messageline.style.display = 'block';
 		this.messageline.style.width = '500px';
 		this.messageline.style.height = '40px';
+		this.messageline.style.width = 'calc(100% - 32px)';
+		this.messageline.style.margin = '15px 0';
 
 		this.elem.appendChild(this.textarea);
 		this.elem.appendChild(this.messageline);
@@ -254,6 +262,7 @@ class Battleship extends Service {
 					this.gameStatusText.innerHTML = event.gameStatus;
 				this.resetBoardButton.disabled = false;
 				this.clearBoard(this.enemyBoard);
+				this.resetBoard();
 				break;
 
 			case 'turn':

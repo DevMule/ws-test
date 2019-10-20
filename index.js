@@ -102,7 +102,6 @@ wss.on('connection', (ws) => {
 				break;
 
 			case 'Battleship':
-				log(msg);
 				if (msg.value === 'new') {
 					if (BattleshipMess.gameByPlayer[ws])
 						BattleshipMess.removeGame(ws);

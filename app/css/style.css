@@ -116,6 +116,7 @@ h1,h2,h3,h4,h5,h6{
 }
 .button:disabled{
     background-color: #757575;
+    cursor: default;
 }
 
 .content {
