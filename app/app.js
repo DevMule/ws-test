@@ -202,6 +202,7 @@ class Battleship extends Service {
 				this.gameStatus =
 					this.gameStatusText.innerHTML = event.gameStatus;
 				this.resetBoardButton.disabled = false;
+				this.clearBoard(this.enemyBoard);
 				break;
 
 			case 'turn':
@@ -313,7 +314,6 @@ class Battleship extends Service {
 	hitBoard(board, col, row, isHit = false) {
 		let btn = board.chunks[row][col];
 		board.data[row][col].isHit = true;
-		btn.removeEventListener('click', this.onBoardClick.bind(this, board, col, row));
 		btn.style.opacity = '0.5';
 		if (isHit)
 			btn.style.color =
@@ -322,7 +322,7 @@ class Battleship extends Service {
 
 	// board interface
 	onBoardClick(board, col, row) {
-		if (this.myTurn && board === this.enemyBoard) {
+		if (this.myTurn && board === this.enemyBoard && !board.data[row][col].isHit) {
 			this.myTurn = false;
 			this.wrireline(`my turn: ${col}, ${row}, now enemy\'s turn`);
 			this.sendClick(col, row);
@@ -377,9 +377,7 @@ class Battleship extends Service {
 				let btn = board.chunks[row][col];
 				btn.style.color =
 					btn.style.backgroundColor = '#999999';
-				btn.addEventListener('click', () => {
-					this.onBoardClick(board, col, row)
-				});
+				btn.style.opacity = '1';
 				board.data[row][col] = {
 					ship: null,
 					isHit: false,
