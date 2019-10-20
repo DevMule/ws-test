@@ -141,6 +141,7 @@ wss.on('connection', (ws) => {
 					}
 				} else if (msg.value === 'turn') {
 					let game = BattleshipMess.gameByPlayer[ws];
+					if(!game) return;
 
 					// player can move - false - p1's move, else - p2's move
 					let otherPlayer = game[0] !== ws ? game[0] : game[1];

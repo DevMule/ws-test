@@ -1,0 +1,128 @@
+@charset "utf-8";
+
+* {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Chrome/Safari/Opera */
+    -khtml-user-select: none;    /* Konqueror */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently
+                                  not supported by any browser */
+}
+
+body {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 14px;
+    background-color: #353535;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    border: 0 none;
+    font-size: 16px;
+    color: #5DB71D;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+h1,h2,h3,h4,h5,h6{
+    color: #eeeeee;
+    font-weight: bold;
+    padding-top: 10px;
+}
+
+.menu {
+	/*width: calc(100% - (100% - 720px));*/
+	width: 100%;
+    /*min-height: 80px;*/
+    background-color: #5DB71D;
+	/*padding: 0 calc((100% - 720px)/2);*/
+
+}
+.menu-clipped {
+	position: absolute;
+	top: 0;
+}
+.menu > div{
+	max-width: 720px;
+	margin: 0 auto;
+	padding: 0 auto;
+	height: 80px
+}
+.menu-icon{
+	float: left;
+	margin: 15px 0;
+}
+.menu-item{
+	text-align: center;
+	float: right;
+	height: calc(100% - 30px);
+	padding: 30px 4px 0;
+	margin: 0;
+	min-width: 70px;
+
+	cursor: pointer;
+	color: #eee;
+	font-weight: bold;
+	text-transform: uppercase;
+
+	-webkit-transition: all 0.2s ease;
+	-moz-transition: all 0.2s ease;
+	-o-transition: all 0.2s ease;
+	-ms-transition: all 0.2s ease;
+	transition: all 0.2s ease;
+}
+.menu-item:hover, .active{
+	background-color: #498D16;
+}
+.menu-item:hover{
+	text-decoration: underline;
+}
+
+.input {
+    border: none;
+    font-size: 16px;
+    outline: none;
+    height: 50px;
+    background-color: #e5e5e5;
+    color: #5DB71D;
+    padding: 0 16px;
+    width: 248px;
+}
+
+.button {
+    border: none;
+    font-size: 16px;
+    outline: none;
+    background-color: #5DB71D;
+    color: #eee;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: center;
+    width: 280px;
+    height: 50px;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    -o-transition: all 0.2s ease;
+    -ms-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+.button:hover {
+    background-color: #498D16;
+}
+.button:disabled{
+    background-color: #757575;
+}
+
+.content {
+    text-align: center;
+    background-color: #454545;
+    max-width: 720px;
+    /*max-width: 1300px;*/
+    padding: 15px 0;
+    margin: 20px auto;
+}

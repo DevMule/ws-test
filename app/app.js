@@ -3,16 +3,27 @@ class App {
 		this.screen = document.getElementById('screen');
 
 		this.connection = new WebSocket('ws://localhost:8000');
-		this.connection.addEventListener('open', () => {
-		});
+		//this.connection.addEventListener('open', () => {});
+		this.connection.addEventListener('close', this.onCloseConnection.bind(this));
 		this.connection.addEventListener('message', this.onMessage.bind(this));
 
+		// UI
+		this.menu = document.getElementById('menu');
+		this.menu.className = 'menu';
+		this.menuCenterDiv = document.createElement('div');
+		this.menu.appendChild(this.menuCenterDiv);
+
+		let icon = document.createElement('h3');
+		icon.innerHTML = 'DevMule';
+		icon.className = 'menu-icon';
+		this.menuCenterDiv.appendChild(icon);
+
 		this.auth = new Authentication(this);
-		this.chat = new Chat(this);
-		this.folderSys = new FolderSystem(this);
-		this.battleshipGame = new Battleship(this);
 
 		this.openScreen(this.auth);
+	}
+
+	onCloseConnection() {
 	}
 
 	openScreen(/*Service*/ service) {
@@ -33,7 +44,7 @@ class App {
 
 			case 'auth':
 				if (event.value === 'success')
-					this.openScreen(this.battleshipGame);
+					this.onAuth();
 				break;
 
 			case 'Battleship':
@@ -46,10 +57,33 @@ class App {
 		}
 	}
 
+	onAuth() {
+		if (!this.chat)
+			this.chat = this.createServiceMenu('CHAT', new Chat(this));
+		if (!this.folderSys)
+			this.folderSys = this.createServiceMenu('FILES', new FolderSystem(this));
+		if (!this.battleshipGame)
+			this.battleshipGame = this.createServiceMenu('BATTLESHIPS', new Battleship(this));
+		this.openScreen(this.battleshipGame);
+	}
+
 	send(message) {
 		if (this.connection.readyState === WebSocket.OPEN) {
 			this.connection.send(JSON.stringify(message));
 		}
+	}
+
+	createServiceMenu(text, /*Service*/service) {
+		let menuElem = document.createElement('p');
+		menuElem.className = 'menu-item';
+		menuElem.innerHTML = text;
+		this.menuCenterDiv.appendChild(menuElem);
+
+		menuElem.addEventListener('click', () => {
+			this.openScreen(service);
+		});
+
+		return service;
 	}
 }
 
@@ -57,7 +91,7 @@ class Service {
 	constructor(app) {
 		this.app = app;
 		this.elem = document.createElement('div');
-		this.elem.style.textAlign = 'center';
+		this.elem.className = 'content';
 	}
 }
 
@@ -117,30 +151,43 @@ class FolderSystem extends Service {
 class Authentication extends Service {
 	constructor(app) {
 		super(app);
+		this.header = document.createElement('p');
+		this.header.innerHTML = 'Authentication';
+		this.elem.appendChild(this.header);
+
 		this.nickname = document.createElement('input');
 		this.nickname.addEventListener('keydown', this.keydown.bind(this));
-		this.nickname.style.display = 'block';
-		this.nickname.style.width = '500px';
-		this.nickname.style.height = '40px';
-		this.nickname.style.margin = '0 auto';
+		this.nickname.className = 'input';
 		this.nickname.placeholder = 'nickname';
-		this.elem.appendChild(this.nickname);
+
+		var tmpP = document.createElement('p');
+		tmpP.appendChild(this.nickname);
+		this.elem.appendChild(tmpP);
+
+		this.enterButton = document.createElement('button');
+		this.enterButton.addEventListener('click', this.btnClick.bind(this));
+		this.enterButton.innerHTML = 'Enter';
+		this.enterButton.className = 'button';
+
+		tmpP = document.createElement('p');
+		tmpP.appendChild(this.enterButton);
+		this.elem.appendChild(tmpP);
 	}
 
 	keydown(e) {
 		let kc = e.which || e.keyCode;
-		if (kc === 13) {
-			let name = this.nickname.value.trim();
+		if (kc === 13) this.btnClick(e);
+	}
 
-			if (name.length < 3) return;
+	btnClick(e) {
+		let name = this.nickname.value.trim();
 
-			// todo request for auth
-			this.app.send({
-				type: 'auth',
-				name: name,
-				pass: 'nopass',
-			});
-		}
+		if (name.length < 3) return;
+		this.app.send({
+			type: 'auth',
+			name: name,
+			pass: 'nopass',
+		});
 	}
 }
 
@@ -148,11 +195,15 @@ class Battleship extends Service {
 	constructor(app) {
 		super(app);
 		// service ui
+		this.elem.style.maxWidth = '80%';
+
 		this.newGameButton = document.createElement('button');
 		this.newGameButton.innerHTML = 'new game';
+		this.newGameButton.className = 'button';
 		this.newGameButton.addEventListener('click', this.onStartGameClick.bind(this));
 		this.resetBoardButton = document.createElement('button');
 		this.resetBoardButton.innerHTML = 'reset board';
+		this.resetBoardButton.className = 'button';
 		this.resetBoardButton.addEventListener('click', this.resetBoard.bind(this));
 		this.gameStatusText = document.createElement('p');
 		this.gameStatusText.innerHTML = 'offline';
@@ -322,7 +373,10 @@ class Battleship extends Service {
 
 	// board interface
 	onBoardClick(board, col, row) {
-		if (this.myTurn && board === this.enemyBoard && !board.data[row][col].isHit) {
+		if (this.myTurn &&
+			board === this.enemyBoard &&
+			!board.data[row][col].isHit &&
+			this.gameStatus === 'online') {
 			this.myTurn = false;
 			this.wrireline(`my turn: ${col}, ${row}, now enemy\'s turn`);
 			this.sendClick(col, row);
